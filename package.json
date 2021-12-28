@@ -53,10 +53,10 @@
 		"configuration": {
 			"title": "React File Structure",
 			"properties": {
-				"react-file-structure.Language": {
+				"react-file-structure.Extension": {
 					"type": "string",
 					"default": "TSX",
-					"description": "Language for react components",
+					"description": "Extension for react components",
 					"enum": [
 						"JS",
 						"JSX",
@@ -81,9 +81,9 @@
 				"react-file-structure.Use Index File": {
 					"type": "boolean",
 					"default": true,
-					"description": "Create unnamed (style.css, index.jsx, test.js etc.) files instead of names files in component folder. You should not enter component name with this option."
+					"description": "Create unnamed (style.css, index.jsx, test.js etc.) files instead of named files in component folder. You should not enter component name with this option."
 				},
-				"react-file-structure.Style files": {
+				"react-file-structure.Style File": {
 					"type": "string",
 					"default": "SCSS",
 					"description": "Style files.",
@@ -104,17 +104,17 @@
 				},
 				"react-file-structure.Style Files Folder": {
 					"type": "string",
-					"default": null,
+					"default": "",
 					"description": "Folder for grouping style files. Creates in component folder if not specified."
 				},
-				"react-file-structure.Add Interface Files": {
+				"react-file-structure.Add Interface File": {
 					"type": "boolean",
 					"default": true,
 					"description": "Create interface files for components. Creates embedded interface if not specified."
 				},
 				"react-file-structure.Interface Files Folder": {
 					"type": "string",
-					"default": null,
+					"default": "",
 					"description": "Folder for grouping TypeScript interface files (only for TS language). Creates in component folder if not specified."
 				},
 				"react-file-structure.Add Test File": {
@@ -124,7 +124,7 @@
 				},
 				"react-file-structure.Test Files Folder": {
 					"type": "string",
-					"default": null,
+					"default": "",
 					"description": "Folder for grouping test files. Creates in component folder if not specified."
 				}
 			}

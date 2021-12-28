@@ -14,8 +14,8 @@ export const enum PROMPT_MSG {
     rootFolder = 'Enter absolute path to base folder (where path starts)',
     compPath = 'Enter component path with / or \\ (e.g. user/profile)',
     compPathWithName = 'Enter component path and name with / or \\ (e.g. user/profile/Avatar)',
-    compPathWithOpts = 'Enter options (l=TS, s=CSS, i, t) and then component path with / or \\',
-    compPathWithNameAndOpts = 'Enter options (l=TS, s=CSS, i+, t+, h+) and name and then component path with / or \\'
+    compPathWithOpts = 'Enter options (e=TS, s=CSS, i+, t+, h+) and then component path with / or \\',
+    compPathWithNameAndOpts = 'Enter options (e=TS, s=CSS, i+, t+, h+) and name and then component path with / or \\'
 }
 
 // Languages for react components

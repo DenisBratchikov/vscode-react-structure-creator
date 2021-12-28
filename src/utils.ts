@@ -36,18 +36,19 @@ export async function getConfig(rootFolder: string | undefined): Promise<IConfig
         }
     }
     const config: IConfig = {
-        language: vsConfig.get('react-file-structure.Language') ?? LANGUAGES.TSX,
+        language: vsConfig.get('react-file-structure.Extension') ?? LANGUAGES.TSX,
         hooks: vsConfig.get('react-file-structure.Use React Hooks') ?? true,
         useIndex: vsConfig.get('react-file-structure.Use Index File') ?? true,
-        styles: vsConfig.get('react-file-structure.Style files') ?? STYLES.SCSS,
+        styles: vsConfig.get('react-file-structure.Style File') ?? STYLES.SCSS,
         stylesFolder: vsConfig.get('react-file-structure.Style Files Folder'),
-        interface: vsConfig.get('react-file-structure.Add Interface Files') ?? true,
+        interface: vsConfig.get('react-file-structure.Add Interface File') ?? true,
         interfaceFolder: vsConfig.get('react-file-structure.Interface Files Folder'),
         tests: vsConfig.get('react-file-structure.Add Test File') ?? true,
         testsFolder: vsConfig.get('react-file-structure.Test Files Folder'),
         rootPath,
     };
     checkConfig(config);
+    makeConfigConsistent(config);
     return config;
 }
 
@@ -63,6 +64,13 @@ function checkConfig(config: IConfig): void | never {
     } else if (config.testsFolder && !FOLDER_REG_EXP.test(config.testsFolder)) {
         throw new Error(ERRORS.invalidFolderName.replace('%%', 'test'));
     }
+}
+
+/**
+ * Modifies configuration to make it consistent
+ * @param config Current config
+ */
+function makeConfigConsistent(config: IConfig): void {
     if (config.language !== LANGUAGES.TSX) {
         config.interface = false;
     }
@@ -96,19 +104,20 @@ export async function getComponentPathWithOptions(config: IConfig): Promise<stri
         } else if (firstChar === 't') {
             config.tests = value[1] === '+';
         } else if (firstChar === 's') {
-            const css = value[2];
+            const css = value.split('=')[1];
             if (!css || !Object.keys(STYLES).includes(css.toUpperCase())) {
                 return;
             }
             config.styles = css as STYLES;
-        } else if (firstChar === 'l') {
-            const lang = value[2];
+        } else if (firstChar === 'e') {
+            const lang = value.split('=')[1];
             if (!lang || !Object.keys(LANGUAGES).includes(lang.toUpperCase())) {
                 return;
             }
             config.language = lang as LANGUAGES;
         }
     });
+    makeConfigConsistent(config);
     return getCheckedComponentPath(componentPath);
 }
 
