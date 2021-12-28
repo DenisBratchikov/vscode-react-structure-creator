@@ -1,0 +1,7 @@
+node_modules
+*.js
+*.js.map
+tsconfig.json
+out
+package-lock.json
+*.docx
