@@ -1,124 +1,94 @@
-import {IInsertionData} from '.';
-import {IConfig} from '..';
-import {LANGUAGES, STYLES} from '../constants';
+import { IInsertionData } from '.';
+import { IConfig } from '..';
+import { COMPONENT_EXTENSIONS, COMPONENT_FUNCTIONS, COMPONENT_TYPES, INDEX_FILE_TYPES } from '../constants';
 
-// Reg exp for searching anchors in template strings
-const TEMPLATE_REG_EXP = /(%(\w|-)+?\n?%)/ig;
-
-// Template for react hook component
-const COMPONENT_HOOK_TEMPLATE = `import { useState, useRef } from 'react';
-%imports%
-export default function %name%(props%i-name%) {
-    return (<div></div>);
+function isDefaultExport(config: IConfig): boolean {
+  return config.componentFunction === COMPONENT_FUNCTIONS.AD || config.componentFunction === COMPONENT_FUNCTIONS.DD;
 }
-`;
 
-// Template for react class component
-const COMPONENT_CLASS_TEMPLATE = `import React%r-import% from 'react';
-%imports%
-export default class $name$ extends React.Component%i-generic% {
-
-    constructor(props%i-name%) {
-        super(props);
-    }
-
-    render()%r-node% {
-        return (<div></div>);
-    }
+function clearExtension(path: string) {
+  return path.replace(/(\.ts|\.js|\.tsx)$/, '');
 }
-`;
 
 /**
  * Returns data for react component
  * @param config Configuration for creator class
  * @param data Data from creator class
  */
-export function getComponentData(config: IConfig, data: IInsertionData): string {
-    const name = data.component;
-    let result = (config.hooks ? COMPONENT_HOOK_TEMPLATE : COMPONENT_CLASS_TEMPLATE).replace(/\$name\$/, name);
-    if (config.language === LANGUAGES.TSX) {
-        result = bringToTS(result, config, data);
-    } else {
-        result = removeAnchors(result);
-    }
-    return result;
+export function getComponentData(data: IInsertionData, config: IConfig): string {
+  const name = data.component;
+  const result = ["import React from 'react';"];
+
+  if (data.stylesPath) {
+    result.push('', `import styles from './${clearExtension(data.stylesPath)}';`, '');
+  }
+
+  if (config.componentTypes === COMPONENT_TYPES.FILE && data.typesPath) {
+    result.push('', `import { ${name}Props } from './${clearExtension(data.typesPath)}';`, '');
+  } else if (config.componentTypes === COMPONENT_TYPES.INLINE) {
+    result.push('', `export interface ${name}Props { }`, '');
+  }
+
+  if (config.componentFunction === COMPONENT_FUNCTIONS.AD || config.componentFunction === COMPONENT_FUNCTIONS.AN) {
+    result.push(
+      '',
+      `${config.componentFunction === COMPONENT_FUNCTIONS.AN ? 'export ' : ''}const ${name}${
+        config.componentTypes !== COMPONENT_TYPES.NONE ? `: React.FC<${name}Props>` : ''
+      } = () => {`
+    );
+  } else if (config.componentFunction === COMPONENT_FUNCTIONS.DD) {
+    result.push(
+      '',
+      `export default function ${name}(${config.componentTypes !== COMPONENT_TYPES.NONE ? `props: ${name}Props` : ''})${
+        config.componentTypes !== COMPONENT_TYPES.NONE ? ': ReturnType<React.FC>' : ''
+      } {`
+    );
+  } else if (config.componentFunction === COMPONENT_FUNCTIONS.DN) {
+    result.push(
+      '',
+      `export function ${name}(${config.componentTypes !== COMPONENT_TYPES.NONE ? `props: ${name}Props` : ''})${
+        config.componentTypes !== COMPONENT_TYPES.NONE ? ': ReturnType<React.FC>' : ''
+      } {`
+    );
+  }
+
+  result.push('  return <div />;', '}', '');
+
+  if (config.componentFunction === COMPONENT_FUNCTIONS.AD) {
+    result.push(`export default ${name};`, '');
+  }
+
+  return result.filter((elem, index, arr) => !(elem === '' && arr[index - 1] === '')).join('\n');
 }
 
-/**
- * Replaces string anchors with TypeScript constructions
- * @param origin String to process
- * @param config Configuration for creator class
- * @param data Data from creator class
- */
-function bringToTS(origin: string, config: IConfig, {component, interfacePath, stylePath}: IInsertionData) {
-    const interfaceName = getPropsInterfaceName(component);
-    return origin.replace(TEMPLATE_REG_EXP, (match: string): string => {
-        switch (match) {
-            case '%r-import%':
-                return ', {ReactNode}';
-            case '%imports%':
-                let result = '';
-                let styleText = '';
-                if (stylePath) {
-                    styleText = config.styles === STYLES.CSS_MODULES ?
-                        `\nimport classes from './${stylePath}';\n` :
-                        `\nimport './${stylePath}';\n`;
-                }
-                if (interfacePath) {
-                    result += `\nimport ${interfaceName} from './${interfacePath}';\n`;
-                    result += styleText;
-                } else {
-                    result += styleText;
-                    result += `\nexport interface ${interfaceName} { };\n`;
-                }
-                return result;
-            case '%i-generic%':
-                return `<${interfaceName}>`;
-            case '%i-name%':
-                return `: ${interfaceName}`;
-            case '%r-node%':
-                return ': ReactNode';
-            default:
-                return '';
-        }
-    });
-}
-
-/**
- * Returns interface props name for react component interface
- * @param component
- */
-function getPropsInterfaceName(component: string): string {
-    return `I${component}Props`;
-}
-
-/**
- * Removes anchors from template
- * @param origin String to process
- */
-function removeAnchors(origin: string): string {
-    return origin.replace(TEMPLATE_REG_EXP, '');
-}
-
-/**
- * Returns data for react component styles file
- */
 export function getStyleData(): string {
-    return '';
+  return '';
 }
 
-/**
- * Returns data for react component interface file
- * @param config Configuration for creator class
- * @param data Data from creator class
- */
-export function getInterfaceData(config: IConfig, data: IInsertionData): string {
-    return `export default interface ${getPropsInterfaceName(data.component)} { }`;
+export function getInterfaceData(data: IInsertionData): string {
+  return `export interface ${data.component}Props { };\n`;
 }
 
-/**
- * Returns data for react component tests file
- */
-export function getTestData(): string {
-    return '';
+export function getIndexData(data: IInsertionData, config: IConfig): string {
+  return `export ${isDefaultExport(config) ? `{ default as ${data.component} }` : `{ ${data.component} }`} from './${
+    data.component
+  }';\n`;
+}
+
+export function getTestData(data: IInsertionData, config: IConfig): string {
+  const { component } = data;
+  const componentImport = isDefaultExport(config) ? `import ${component}` : `import { ${component} }`;
+  const componentImportFrom =
+    config.indexFile === INDEX_FILE_TYPES.COMPONENT
+      ? `from '${config.testFileFolder ? '.' : ''}.';`
+      : `from '${config.testFileFolder ? '.' : ''}./${component}';`;
+
+  return [
+    `${componentImport} ${componentImportFrom}`,
+    '',
+    `describe('${component}', () => {`,
+    "  it('', () => { });",
+    '});',
+    ''
+  ].join('\n');
 }

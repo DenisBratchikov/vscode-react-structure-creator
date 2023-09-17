@@ -1,11 +1,11 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import {getComponentData, getStyleData, getInterfaceData, getTestData} from './insertions';
-import {IConfig} from '..';
-import {LANGUAGES, STYLES} from '../constants';
-import {errorDecorator, showError} from '../utils';
-import {IInitData, IInsertionData} from '.';
-import {FILE_NAMES, FILE_EXTENSIONS, ERRORS} from './constants';
+import { getComponentData, getStyleData, getInterfaceData, getTestData, getIndexData } from './insertions';
+import { IConfig } from '..';
+import { INDEX_FILE_TYPES, COMPONENT_EXTENSIONS, COMPONENT_FUNCTIONS, COMPONENT_TYPES } from '../constants';
+import { errorDecorator, showError } from '../utils';
+import { IInitData, IInsertionData } from '.';
+import { FILE_NAMES, ERRORS } from './constants';
 
 /**
  * Creates folder with given path
@@ -13,13 +13,13 @@ import {FILE_NAMES, FILE_EXTENSIONS, ERRORS} from './constants';
  * @param {Function} callback Function, that will be called on success creation
  */
 function createFolder(path: string, callback: Function): void {
-    fs.access(path, (err: NodeJS.ErrnoException | null) => {
-        if (err) {
-            fs.mkdir(path, errorDecorator(callback))
-        } else {
-            callback()
-        }
-    });
+  fs.access(path, (err: NodeJS.ErrnoException | null) => {
+    if (err) {
+      fs.mkdir(path, errorDecorator(callback));
+    } else {
+      callback();
+    }
+  });
 }
 
 /**
@@ -29,194 +29,162 @@ function createFolder(path: string, callback: Function): void {
  * @param {Function} callback Function, that will be called on success creation
  */
 function createFile(path: string, data: string, callback: Function): void {
-    fs.access(path, (err: NodeJS.ErrnoException | null) => {
-        if (err) {
-            fs.appendFile(path, data, errorDecorator(callback));
-        } else {
-            showError(new Error(ERRORS.fileAlreadyExists.replace('%%', path)));
-        }
-    });
+  fs.access(path, (err: NodeJS.ErrnoException | null) => {
+    if (err) {
+      fs.appendFile(path, data, errorDecorator(callback));
+    } else {
+      showError(new Error(ERRORS.fileAlreadyExists.replace('%%', path)));
+    }
+  });
 }
 
 /**
  * Class for creating a react files structure/
  */
 export default class Creator {
-    private readonly componentPath: string;
-    private readonly config: IConfig;
-    private rootPath: string;
-    private folders: string[] = [];
-    private componentName: string = '';
-    private styleName: string | null = '';
-    private testName: string | null = '';
-    private interfaceName: string | null = '';
-    private insertionData: IInsertionData = {component: ''};
+  private readonly componentPath: string;
+  private readonly config: IConfig;
+  private rootPath: string;
+  private folders: string[] = [];
+  private componentFileName: string = '';
+  private stylesFileName: string | null = '';
+  private testFileName: string | null = '';
+  private typesFileName: string | null = '';
+  private indexFileName: string | null = '';
+  private insertionData: IInsertionData = { component: '' };
 
-    constructor({componentPath}: IInitData, config: IConfig) {
-        this.componentPath = componentPath;
-        this.config = config;
-        this.rootPath = config.rootPath;
+  constructor({ componentPath }: IInitData, config: IConfig) {
+    this.componentPath = componentPath;
+    this.config = config;
+    this.rootPath = config.rootPath;
+  }
+
+  execute() {
+    const elems = this.componentPath.replace('\\', '/').split('/');
+    const { componentExtension } = this.config;
+
+    let componentName =
+      (this.config.indexFile !== INDEX_FILE_TYPES.COMPONENT ? (elems.pop() as string) : null) || FILE_NAMES.component;
+    this.insertionData.component = componentName;
+
+    this.componentFileName = `${componentName}${componentExtension}`;
+    this.stylesFileName = this.config.stylesFileExtension
+      ? `${this.config.stylesFileName || componentName || FILE_NAMES.styles}${this.config.stylesFileExtension}`
+      : null;
+    this.typesFileName =
+      this.config.componentTypes === COMPONENT_TYPES.FILE
+        ? this.config.typesFileName || componentName || FILE_NAMES.types
+        : null;
+    this.typesFileName && (this.typesFileName += this.typesFileName === componentName ? '.d.ts' : '.ts');
+    this.testFileName = this.config.testFile ? `${componentName}.test${componentExtension}` : null;
+    this.indexFileName =
+      this.config.indexFile === INDEX_FILE_TYPES.EXPORTS ? `${FILE_NAMES.component}${componentExtension}` : null;
+
+    this.folders = elems;
+    this._createStructure();
+  }
+
+  private async _createStructure(): Promise<void> {
+    this.rootPath = await this._createFolders(this.rootPath, this.folders);
+    const creationPromises = [];
+
+    const stylesFileName = this.stylesFileName;
+    if (stylesFileName) {
+      let styleFolderPromise;
+      if (this.config.stylesFileFolder) {
+        styleFolderPromise = this._createFolders(this.rootPath, [this.config.stylesFileFolder]);
+        this.insertionData.stylesPath = `${this.config.stylesFileFolder}/${stylesFileName}`;
+      } else {
+        styleFolderPromise = Promise.resolve(this.rootPath);
+        this.insertionData.stylesPath = stylesFileName;
+      }
+      creationPromises.push(
+        styleFolderPromise.then((rootPath) =>
+          this._createFile(rootPath, stylesFileName, this.config.useSnippets ? getStyleData() : '')
+        )
+      );
     }
 
-    /**
-     * Public method for activating class
-     */
-    execute() {
-        const elems = this.componentPath.replace('\\', '/').split('/');
-        const useIndex = this.config.useIndex;
-        if (useIndex) {
-            this.componentName = FILE_NAMES.lang;
-            this.styleName = FILE_NAMES.style;
-            this.interfaceName = FILE_NAMES.interface;
-            this.testName = FILE_NAMES.test;
-            const componentFolder = elems[elems.length - 1];
-            this.insertionData.component = componentFolder[0].toUpperCase() + componentFolder.slice(1);
-        } else {
-            const name = elems.pop() as string;
-            this.componentName = this.styleName = this.insertionData.component = this.interfaceName = name;
-            this.testName = `${name}${FILE_EXTENSIONS.test}`;
-        }
-
-        const langExt = this._getLangExtension();
-        this.componentName += langExt;
-        this.folders = elems;
-
-        if (this.config.interface) {
-            this.interfaceName += FILE_EXTENSIONS.ts;
-        } else {
-            this.interfaceName = null;
-        }
-
-        if (this.config.tests) {
-            this.testName += langExt === FILE_EXTENSIONS.tsx ? FILE_EXTENSIONS.ts : FILE_EXTENSIONS.js;
-        } else {
-            this.testName = null;
-        }
-
-        const styleExt = this._getStylesExtension();
-        if (styleExt) {
-            this.styleName += styleExt;
-        } else {
-            this.styleName = null;
-        }
-
-        this._createStructure();
+    const typesFileName = this.typesFileName;
+    if (typesFileName) {
+      let typesFolderPromise;
+      if (this.config.typesFileFolder) {
+        typesFolderPromise = this._createFolders(this.rootPath, [this.config.typesFileFolder]);
+        this.insertionData.typesPath = `${this.config.typesFileFolder}/${typesFileName}`;
+      } else {
+        typesFolderPromise = Promise.resolve(this.rootPath);
+        this.insertionData.typesPath = typesFileName;
+      }
+      creationPromises.push(
+        typesFolderPromise.then((rootPath) =>
+          this._createFile(rootPath, typesFileName, this.config.useSnippets ? getInterfaceData(this.insertionData) : '')
+        )
+      );
     }
 
-    /**
-     * Returns extension for react component file
-     */
-    private _getLangExtension(): string {
-        switch (this.config.language) {
-            case LANGUAGES.JS:
-                return FILE_EXTENSIONS.js;
-            case LANGUAGES.JSX:
-                return FILE_EXTENSIONS.jsx;
-            case LANGUAGES.TSX:
-                return FILE_EXTENSIONS.tsx;
-            default:
-                throw new Error(ERRORS.invalidLangExtension)
-        }
+    const testFileName = this.testFileName;
+    if (testFileName) {
+      const testFolderPromise = this.config.testFileFolder
+        ? this._createFolders(this.rootPath, [this.config.testFileFolder])
+        : Promise.resolve(this.rootPath);
+      creationPromises.push(
+        testFolderPromise.then((rootPath) =>
+          this._createFile(
+            rootPath,
+            testFileName,
+            this.config.useSnippets ? getTestData(this.insertionData, this.config) : ''
+          )
+        )
+      );
     }
 
-    /**
-     * Returns extension for styles file
-     */
-    private _getStylesExtension(): string {
-        switch (this.config.styles) {
-            case STYLES.NO:
-                return '';
-            case STYLES.CSS:
-                return FILE_EXTENSIONS.css;
-            case STYLES.CSS_MODULES:
-                return FILE_EXTENSIONS.cssModules;
-            case STYLES.LESS:
-                return FILE_EXTENSIONS.less;
-            case STYLES.SCSS:
-                return FILE_EXTENSIONS.scss;
-            default:
-                throw new Error(ERRORS.invalidLangExtension)
-        }
+    creationPromises.push(
+      this._createFile(
+        this.rootPath,
+        this.componentFileName,
+        this.config.useSnippets ? getComponentData(this.insertionData, this.config) : ''
+      )
+    );
+
+    if (this.indexFileName) {
+      creationPromises.push(
+        this._createFile(
+          this.rootPath,
+          this.indexFileName,
+          this.config.useSnippets ? getIndexData(this.insertionData, this.config) : ''
+        )
+      );
     }
 
-    /**
-     * Creates file structure for react component
-     */
-    private async _createStructure(): Promise<void> {
-        this.rootPath = await this._createFolders(this.rootPath, this.folders);
-        const creationPromises = [];
-        const styleFileName = this.styleName;
-        if (styleFileName) {
-            let styleFolderPromise;
-            if (this.config.stylesFolder) {
-                styleFolderPromise = this._createFolders(this.rootPath, [this.config.stylesFolder]);
-                this.insertionData.stylePath = `${this.config.stylesFolder}/${this.styleName}`;
-            } else {
-                styleFolderPromise = Promise.resolve(this.rootPath);
-                this.insertionData.stylePath = styleFileName;
-            }
-            creationPromises.push(styleFolderPromise.then(
-                rootPath => this._createFile(rootPath, styleFileName, getStyleData())
-            ));
-        }
-        const interfaceFileName = this.interfaceName;
-        if (interfaceFileName) {
-            let interfaceFolderPromise;
-            const importInterfaceName = interfaceFileName.slice(0, interfaceFileName.length - 3);
-            if (this.config.interfaceFolder) {
-                interfaceFolderPromise = this._createFolders(this.rootPath, [this.config.interfaceFolder]);
-                this.insertionData.interfacePath = `${this.config.interfaceFolder}/${importInterfaceName}`;
-            } else {
-                interfaceFolderPromise = Promise.resolve(this.rootPath);
-                this.insertionData.interfacePath = importInterfaceName;
-            }
-            creationPromises.push(interfaceFolderPromise.then(
-                rootPath => this._createFile(
-                    rootPath, interfaceFileName, getInterfaceData(this.config, this.insertionData)
-                )
-            ));
-        }
-        const testFileName = this.testName;
-        if (testFileName) {
-            const testFolderPromise = this.config.testsFolder ?
-                this._createFolders(this.rootPath, [this.config.testsFolder]) :
-                Promise.resolve(this.rootPath);
-            creationPromises.push(testFolderPromise.then(
-                rootPath => this._createFile(rootPath, testFileName, getTestData())
-            ));
-        }
-        creationPromises.push(
-            this._createFile(this.rootPath, this.componentName, getComponentData(this.config, this.insertionData))
-        );
-        await Promise.all(creationPromises);
-    }
+    await Promise.all(creationPromises);
+  }
 
-    /**
-     * Recursively creates folders from root path
-     * @param {string} root Path to the root folder
-     * @param {string[]} folders Folder names to create
-     */
-    private async _createFolders(root: string, folders: string[]): Promise<string> {
-        return new Promise(resolve => {
-            this._createFoldersRecursively(root, folders, resolve);
-        });
-    }
+  /**
+   * Recursively creates folders from root path
+   * @param {string} root Path to the root folder
+   * @param {string[]} folders Folder names to create
+   */
+  private async _createFolders(root: string, folders: string[]): Promise<string> {
+    return new Promise((resolve) => {
+      this._createFoldersRecursively(root, folders, resolve);
+    });
+  }
 
-    private _createFoldersRecursively(root: string, folders: string[], cb: Function): void {
-        if (!folders.length) {
-            cb(root);
-        }
-        const folderPath = path.join(root, folders.shift() as string);
-        createFolder(folderPath, () => this._createFoldersRecursively(folderPath, folders, cb));
+  private _createFoldersRecursively(root: string, folders: string[], cb: Function): void {
+    if (!folders.length) {
+      cb(root);
     }
+    const folderPath = path.join(root, folders.shift() as string);
+    createFolder(folderPath, () => this._createFoldersRecursively(folderPath, folders, cb));
+  }
 
-    /**
-     * Creates file with given path and data
-     * @param {string} root Path to the root folder (where we create file)
-     * @param {string} name File name with extension
-     * @param {string} data Data to write in the file
-     */
-    private async _createFile(root: string, name: string, data: string): Promise<void> {
-        return new Promise(resolve => createFile(path.join(root, name), data, resolve));
-    }
+  /**
+   * Creates file with given path and data
+   * @param {string} root Path to the root folder (where we create file)
+   * @param {string} name File name with extension
+   * @param {string} data Data to write in the file
+   */
+  private async _createFile(root: string, name: string, data: string): Promise<void> {
+    return new Promise((resolve) => createFile(path.join(root, name), data, resolve));
+  }
 }

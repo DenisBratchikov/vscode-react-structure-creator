@@ -8,17 +8,17 @@ The extension can be activated both via command palette and via folder context m
 * Create react file structure
 * Create react file structure with options
 
-The only difference between them is that the second command has an opportunity to override some settings (only for current execution).
-In both commands you will be asked for a path to component. If you use index files (see [settings](#settings)) you should specify only component path, e.g. **user/profile**. Otherwise, you should also add component name in path, e.g. **user/profile/Avatar**.
+The only difference between them is that the second command has an opportunity to override some settings (only for current usage).
+In both commands you will be asked for a path to the component. If you use an index file for the component content (see [settings](#settings)) you should specify only component path, e.g. **user/profile**. Otherwise, you should also add component name in path, e.g. **user/profile/Avatar**.
 
 Second command supports some options separated with comma, which *must* be before component path:
-* **"l"** for extension, e.g. **l=TSX**
-* **"s"** for style file, e.g. **s=CSS**
-* **"i"** for interface file with **+** or **-** for including or excluding respectively, e.g. **i+**
-* **"t"** for test file with **+** or **-** like interface above
-* **"h"** for using hooks or not with **+** or **-** like interface above
+* **"e"** for the extension select, e.g. **e=.tsx**
+* **"i"** for the index file usage, e.g. **i=EXPORTS**
+* **"s"** for the style file exnetsion, e.g. **s=.less**
+* **"t"** for the types file, e.g. **t=FILE**
+* **"qa"** for test file with **+** or **-** for including or excluding respectively, e.g. **qa=+**
 
-Full second command input may look like **"l=TSX, s=CSS, i-, t-, h+, user/profile/Avatar"**.
+Full second command input may look like **"e=.tsx i=EXPORTS s=.less t=FILE qa=- user/profile/Avatar"**.
 
 ![video](images/sample.gif)
 
@@ -26,16 +26,18 @@ Full second command input may look like **"l=TSX, s=CSS, i-, t-, h+, user/profil
 
 | Setting | Description | Default value |
 |  ------ | ----------- | ------------- |
-| Extension | Extension for react components (JS / JSX / TS) | TSX |
-| Use React Hooks | Use react functions (on hooks) instead of classes | true |
+| Component Extension | Extension for creating components (JS / JSX / TS) | TSX |
+| Component Function | Function declaration and the way of exporting components | AD
+| Index File | Use index file for the component | NONE |
+| Styles File Extension | Specifies extension for styles files | '.css' |
+| Styles File Name | One name for any styles file (otherwise it inherited from the component name) | Not specified |
+| Style Files Folder | If specified style files will be created in the separate folder (otherwise in component folder) | Not specified |
+| Component Types | Place to put types of the component | FILE |
+| Types File Name | One name for any types file (otherwise it inherited from the component name with .d.ts suffix) | Not specified |
+| Types File Folder | If specified types files will be created in the separate folder (otherwise in component folder) | Not specified |
+| Component Test File | Should test file be created for the component | false |
+| Test Files Folder | If specified test files will be created in the separate folder (otherwise in component folder) | Not specified |
 | Root Path | Path to the folder, where component path calculation starts | current workspace |
-| Use Index File | Create unnamed (style.css, index.jsx, test.js etc.) files instead of named files in component folder | true |
-| Style files | Specifies extension for style files | SCSS (Sass) |
-| Style Files Folder | If specified style files will be created in separate folder | component folder |
-| Add Interface File | Adds interface file to component (for TSX extension only!) | true |
-| Interface Files Folder | If specified interface files will created in separate folder | component folder |
-| Add Test File | Adds test file to component | true |
-| Test Files Folder | If specified test files will created in separate folder | component folder |
 
 ## Installation
 
@@ -52,3 +54,7 @@ React File Structure Creator is released under the [MIT License](https://github.
 * Create extenstion
 * Add two user commands
 * Add settings to configure extension
+
+### 2.0.0
+* Refactor using parameters
+* Add new parameters

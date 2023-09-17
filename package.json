@@ -1,145 +1,178 @@
 {
-	"name": "react-file-structure",
-	"displayName": "React file structure creator",
-	"description": "Creates file structure for react project",
-	"version": "1.0.0",
-	"license": "(ISC OR GPL-3.0)",
-	"publisher": "DenisBratchikov",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/DenisBratchikov/vscode-react-structure-creator"
-	},
-	"engines": {
-		"vscode": "^1.34.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"keywords": [
-		"react",
-		"typescript",
-		"file structure"
-	],
-	"activationEvents": [
-		"onCommand:extension.create",
-		"onCommand:extension.createCustom"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "extension.create",
-				"title": "Create react file structure"
-			},
-			{
-				"command": "extension.createCustom",
-				"title": "Create react file structure with options"
-			}
-		],
-		"menus": {
-			"explorer/context": [
-				{
-					"command": "extension.create",
-					"group": "React_file_structure_creator@1",
-					"when": "resourceExtname == ''"
-				},
-				{
-					"command": "extension.createCustom",
-					"group": "React_file_structure_creator@1",
-					"when": "resourceExtname == ''"
-				}
-			]
-		},
-		"configuration": {
-			"title": "React File Structure",
-			"properties": {
-				"react-file-structure.Extension": {
-					"type": "string",
-					"default": "TSX",
-					"description": "Extension for react components",
-					"enum": [
-						"JS",
-						"JSX",
-						"TSX"
-					],
-					"enumDescriptions": [
-						"Create .js files for react components",
-						"Create .jsx files for react components",
-						"Create .tsx files for react components"
-					]
-				},
-				"react-file-structure.Use React Hooks": {
-					"type": "boolean",
-					"default": true,
-					"description": "Use react hooks instead of classes"
-				},
-				"react-file-structure.Root Path": {
-					"type": "string",
-					"default": null,
-					"description": "Base folder path. From this folder extension calcs path to component"
-				},
-				"react-file-structure.Use Index File": {
-					"type": "boolean",
-					"default": true,
-					"description": "Create unnamed (style.css, index.jsx, test.js etc.) files instead of named files in component folder. You should not enter component name with this option."
-				},
-				"react-file-structure.Style File": {
-					"type": "string",
-					"default": "SCSS",
-					"description": "Style files.",
-					"enum": [
-						"NONE",
-						"CSS",
-						"CSS modules",
-						"LESS",
-						"SCSS"
-					],
-					"enumDescriptions": [
-						"Do not create style files",
-						"Create .css files for styles",
-						"Create .modules.css files for styles",
-						"Create .less files for styles",
-						"Create .scss files for styles"
-					]
-				},
-				"react-file-structure.Style Files Folder": {
-					"type": "string",
-					"default": "",
-					"description": "Folder for grouping style files. Creates in component folder if not specified."
-				},
-				"react-file-structure.Add Interface File": {
-					"type": "boolean",
-					"default": true,
-					"description": "Create interface files for components. Creates embedded interface if not specified."
-				},
-				"react-file-structure.Interface Files Folder": {
-					"type": "string",
-					"default": "",
-					"description": "Folder for grouping TypeScript interface files (only for TS language). Creates in component folder if not specified."
-				},
-				"react-file-structure.Add Test File": {
-					"type": "boolean",
-					"default": true,
-					"description": "Create test files for components."
-				},
-				"react-file-structure.Test Files Folder": {
-					"type": "string",
-					"default": "",
-					"description": "Folder for grouping test files. Creates in component folder if not specified."
-				}
-			}
-		}
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
-		"lint": "tslint -p ./",
-		"watch": "tsc -watch -p ./"
-	},
-	"devDependencies": {
-		"@types/node": "^10.17.60",
-		"@types/vscode": "^1.34.0",
-		"tslint": "^5.16.0",
-		"typescript": "^3.9.10"
-	}
+  "name": "react-file-structure",
+  "displayName": "React file structure creator",
+  "description": "Creates file structure for react project",
+  "version": "2.0.0",
+  "license": "(ISC OR GPL-3.0)",
+  "publisher": "DenisBratchikov",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DenisBratchikov/vscode-react-structure-creator"
+  },
+  "engines": {
+    "vscode": "^1.34.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "react",
+    "typescript",
+    "file structure"
+  ],
+  "activationEvents": [
+    "onCommand:extension.create",
+    "onCommand:extension.createCustom"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.create",
+        "title": "Create react file structure"
+      },
+      {
+        "command": "extension.createCustom",
+        "title": "Create react file structure with options"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "extension.create",
+          "group": "React_file_structure_creator@1",
+          "when": "resourceExtname == ''"
+        },
+        {
+          "command": "extension.createCustom",
+          "group": "React_file_structure_creator@1",
+          "when": "resourceExtname == ''"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "React File Structure",
+      "properties": {
+        "react-file-structure.Component File Extension": {
+          "type": "string",
+          "default": ".tsx",
+          "description": "Extension for react components",
+          "enum": [
+            ".js",
+            ".jsx",
+            ".tsx"
+          ],
+          "enumDescriptions": [
+            "Create .js files for react components",
+            "Create .jsx files for react components",
+            "Create .tsx files for react components"
+          ]
+        },
+        "react-file-structure.Component Function": {
+          "type": "string",
+          "default": "ARROW_DEFAULT",
+          "description": "Function for react components",
+          "enum": [
+            "ARROW_DEFAULT",
+            "ARROW_NAMED",
+            "DECLARATION_DEFAULT",
+            "DECLARATION_NAMED"
+          ],
+          "enumDescriptions": [
+            "Arrow function with default import",
+            "Arrow function with named import",
+            "Function declaration with default import",
+            "Function declaration with named import"
+          ]
+        },
+        "react-file-structure.Index File": {
+          "type": "string",
+          "default": "NONE",
+          "description": "Use index file for the component. With 'COMPONENT' value last input value in path is considered as the folder name",
+          "enum": [
+            "NONE",
+            "COMPONENT",
+            "EXPORTS"
+          ],
+          "enumDescriptions": [
+            "Do not use index files",
+            "Use index files for the component content",
+            "Create named component and index file with the exports"
+          ]
+        },
+        "react-file-structure.Styles File Extension": {
+          "type": "string",
+          "default": ".css",
+          "description": "Extenstion for the styles files. If not set, styles files are not created"
+        },
+        "react-file-structure.Styles File Name": {
+          "type": "string",
+          "default": "",
+          "description": "If set, all styles files will be named as this value. Otherwise, styles files will be named as component name"
+        },
+        "react-file-structure.Styles File Folder": {
+          "type": "string",
+          "default": "",
+          "description": "Folder for grouping styles files. Creates in component folder if not specified."
+        },
+        "react-file-structure.Component Types": {
+          "type": "string",
+          "default": "FILE",
+          "description": "Types file usage",
+          "enum": [
+            "NONE",
+            "INLINE",
+            "FILE"
+          ],
+          "enumDescriptions": [
+            "Do not create types for the component",
+            "Create types in the component file",
+            "Create types in the separate file"
+          ]
+        },
+        "react-file-structure.Types File Name": {
+          "type": "string",
+          "default": "",
+          "description": "If set, all types files will be named as this value. Otherwise, types files will be named as component name with .d.ts extension"
+        },
+        "react-file-structure.Types File Folder": {
+          "type": "string",
+          "default": "",
+          "description": "Folder for grouping TypeScript interface files. Creates in component folder, if not specified"
+        },
+        "react-file-structure.Test File": {
+          "type": "boolean",
+          "default": false,
+          "description": "Create test files for components"
+        },
+        "react-file-structure.Test File Folder": {
+          "type": "string",
+          "default": "",
+          "description": "Folder for grouping test files. Creates in component folder, if not specified"
+        },
+        "react-file-structure.Root Path": {
+          "type": "string",
+          "default": null,
+          "description": "Base folder path. From this folder extension calcs path to component (vscode project path by default)"
+        },
+        "react-file-structure.Use Snippets": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use pre-defined snippets in the created files"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "lint": "tslint -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^10.17.60",
+    "@types/vscode": "^1.34.0",
+    "tslint": "^5.16.0",
+    "typescript": "^3.9.10"
+  }
 }

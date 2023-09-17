@@ -9,6 +9,6 @@ export interface IInitData {
 
 export interface IInsertionData {
    component: string;
-   stylePath?: string;
-   interfacePath?: string;
+   stylesPath?: string;
+   typesPath?: string;
 }
